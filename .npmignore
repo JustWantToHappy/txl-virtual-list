@@ -1,0 +1,17 @@
+.git
+.gitignore
+.vscode/
+.idea/
+node_modules/
+tests/
+__tests__/
+test/
+docs/
+*.log
+.DS_Store
+.editorconfig
+.eslintrc.js
+babel.config.js
+webpack.config.js
+webpack.prod.js
+tsconfig.json
