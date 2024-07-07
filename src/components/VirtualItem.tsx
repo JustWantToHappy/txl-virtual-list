@@ -17,7 +17,7 @@ const VirtualItem: React.FC<VirtualItemProps> = (({ index, children, setHeight, 
   }, [setHeight, index])
 
   return (
-    <div ref={itemRef} style={style}>
+    <div ref={itemRef} style={style} data-index={index}>
       {children}
     </div>
   )

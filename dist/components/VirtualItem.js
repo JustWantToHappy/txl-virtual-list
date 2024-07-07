@@ -7,6 +7,6 @@ var VirtualItem = (function (_a) {
             setHeight(index, itemRef.current.getBoundingClientRect().height);
         }
     }, [setHeight, index]);
-    return (React.createElement("div", { ref: itemRef, style: style }, children));
+    return (React.createElement("div", { ref: itemRef, style: style, "data-index": index }, children));
 });
 export default React.memo(VirtualItem);

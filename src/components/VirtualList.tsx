@@ -1,28 +1,27 @@
 import React from 'react'
 import VirtualItem from './VirtualItem'
 
-export interface VirtualListProps {
+interface VirtualListProps {
   preHeight?: number//预测列表项高度
   extraRenderCount?: number//额外渲染的列表项个数
-  components: React.ReactElement[]
-  wideSkeleton?: boolean
+  components: React.ReactElement[]|string[];
 }
 
-const getStartIndex = (tops: number[], scrollTop: number, extraRenderCount: number) => {
+const getStartIndex = (tops: number[], offset:number,scrollTop: number, extraRenderCount: number) => {
   let left = 0, right = tops.length
   while (left < right) {
     const mid = left + (~~((right - left) / 2))
-    if (tops[mid] >= scrollTop) right = mid
+    if (tops[mid]+offset >= scrollTop) right = mid
     else left = mid + 1
   }
   return Math.max(0, left - extraRenderCount - 1)
 }
 
-const getEndIndex = (tops: number[], scrollTop: number, extraRenderCount: number, clientHeight: number) => {
+const getEndIndex = (tops: number[], offset:number,scrollTop: number, extraRenderCount: number, clientHeight: number) => {
   let left = 0, right = tops.length
   while (left < right) {
     const mid = left + (~~((right - left) / 2))
-    if (tops[mid] < scrollTop + clientHeight) left = mid + 1
+    if (tops[mid]+offset < scrollTop + clientHeight) left = mid + 1
     else right = mid
   }
   return Math.min(tops.length - 1, left + extraRenderCount)
@@ -30,7 +29,7 @@ const getEndIndex = (tops: number[], scrollTop: number, extraRenderCount: number
 
 // eslint-disable-next-line react/display-name
 export const VirtualList =React.forwardRef<HTMLDivElement, VirtualListProps>((props, ref) => {
-  const { preHeight = 50, extraRenderCount = 4, components, wideSkeleton = false } = props
+  const { preHeight = 50, extraRenderCount = 4, components } = props
   const heightsRef = React.useRef<number[]>([])
   const [scrollTop, setScrollTop] = React.useState(0)
   const [tops, setTops] = React.useState<number[]>([])
@@ -62,7 +61,7 @@ export const VirtualList =React.forwardRef<HTMLDivElement, VirtualListProps>((pr
   React.useEffect(() => {
     const handleScroll = () => {
       if (containerRef.current) {
-        setScrollTop(Math.max(0, window.scrollY - containerRef.current.offsetTop))
+        setScrollTop(Math.max(0, window.scrollY))
       }
     }
     window.addEventListener('scroll', handleScroll)
@@ -76,21 +75,22 @@ export const VirtualList =React.forwardRef<HTMLDivElement, VirtualListProps>((pr
 
   const getCurrentRenderItems = () => {
     const height = tops[tops.length - 1] ?? 0
-    const clientHeight = typeof window !== 'undefined' ? (containerRef.current ? window.innerHeight - containerRef.current.offsetTop : window.innerHeight) : 0
-    const startIndex = getStartIndex(tops, scrollTop, extraRenderCount)
-    const endIndex = getEndIndex(tops, scrollTop, extraRenderCount, clientHeight)
+    const clientHeight =window.innerHeight;
+		const offset=containerRef.current?.offsetTop??0;
+    const startIndex = getStartIndex(tops,offset, scrollTop, extraRenderCount)
+    const endIndex = getEndIndex(tops, offset,scrollTop, extraRenderCount, clientHeight)
     return (<div
       style={{
         width: '100%',
         height: height + 'px'
       }}>
-      {components.slice(startIndex, endIndex).map((component) => {
-        const index = component.props['data-index']
+      {components.slice(startIndex, endIndex).map((component,index:number) => {
+			const currentIndex=startIndex+index;
         return <VirtualItem
           key={component.key}
           setHeight={setVirtualItemHeight}
-          style={{ position: 'absolute', width: '100%', top: `${tops[index]}px`, willChange: 'top' }}
-          index={index}>
+          style={{ position: 'absolute', width: '100%', top: `${tops[currentIndex]}px`}}
+          index={currentIndex}>
           {component}
         </VirtualItem>
       })}
@@ -99,7 +99,7 @@ export const VirtualList =React.forwardRef<HTMLDivElement, VirtualListProps>((pr
 
   return (<div
     ref={containerRef}
-    className={`w-full relative`}>
+		style={{width:"100%",position:"relative"}}>
     {getCurrentRenderItems()}
   </div>)
 })
